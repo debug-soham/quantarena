@@ -1,0 +1,6 @@
+# No base checkpoint was released for Phi-4-mini, so we use the instruct model.
+model:
+  name: phi-4-mini
+  hf_id: microsoft/Phi-4-mini-instruct
+  dtype: bfloat16
+  max_seq_len: 8192

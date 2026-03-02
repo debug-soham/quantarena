@@ -1,0 +1,29 @@
+# Shared defaults for every experiment. Model and method files are merged on top.
+seed: 0
+output_dir: results
+checkpoint_dir: checkpoints
+
+calib:
+  dataset: mit-han-lab/pile-val-backup
+  split: validation
+  text_field: text
+  n_samples: 128
+  seq_len: 512
+
+eval:
+  dataset: wikitext
+  subset: wikitext-2-raw-v1
+  split: test
+  text_field: text
+  seq_len: 2048
+  stride: 512
+  max_windows: null
+
+bench:
+  backend: vllm
+  batch_sizes: [1, 8, 32]
+  input_len: 512
+  output_len: 128
+  warmup: 2
+  iters: 5
+  gpu_memory_utilization: 0.85

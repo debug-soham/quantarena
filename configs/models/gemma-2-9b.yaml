@@ -1,0 +1,5 @@
+model:
+  name: gemma-2-9b
+  hf_id: google/gemma-2-9b
+  dtype: bfloat16
+  max_seq_len: 4096

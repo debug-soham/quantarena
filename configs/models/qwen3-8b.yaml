@@ -1,0 +1,5 @@
+model:
+  name: qwen3-8b
+  hf_id: Qwen/Qwen3-8B-Base
+  dtype: bfloat16
+  max_seq_len: 8192
