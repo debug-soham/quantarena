@@ -1,13 +1,15 @@
 [project]
 name = "quantarena"
 version = "0.1.0"
-description = "Add your description here"
+description = "Open benchmark comparing AWQ, GPTQ and FP8 quantization on open-weight LLMs"
 readme = "README.md"
 authors = [
     { name = "Soham", email = "acad.soham@gmail.com" }
 ]
-requires-python = ">=3.12"
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+]
 
 [project.scripts]
 quantarena = "quantarena:main"
