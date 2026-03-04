@@ -1,0 +1,9 @@
+# W8A8 FP8 with per-channel weight scales and dynamic per-token activation scales.
+# Needs no calibration data. Native FP8 matmuls require sm89+ (Ada/Hopper);
+# vLLM falls back to a weight-only Marlin kernel on Ampere.
+quant:
+  method: fp8
+  bits: 8
+  options:
+    scheme: FP8_DYNAMIC
+    ignore: [lm_head]

@@ -1,0 +1,11 @@
+quant:
+  method: awq
+  bits: 4
+  group_size: 128
+  options:
+    zero_point: true
+    version: GEMM
+
+# AWQ GEMM kernels run in fp16
+model:
+  dtype: float16
