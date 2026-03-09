@@ -11,6 +11,15 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+eval = [
+    "torch>=2.5",
+    "transformers>=4.47",
+    "accelerate>=1.2",
+    "datasets>=3.2",
+    "safetensors>=0.4",
+]
+
 [project.scripts]
 quantarena = "quantarena:main"
 
