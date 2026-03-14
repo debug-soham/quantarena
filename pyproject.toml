@@ -20,6 +20,7 @@ eval = [
     "safetensors>=0.4",
 ]
 awq = ["autoawq>=0.2.7"]
+gptq = ["gptqmodel>=1.6", "optimum>=1.23"]
 
 [project.scripts]
 quantarena = "quantarena:main"

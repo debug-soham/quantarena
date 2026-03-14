@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 
 BACKENDS = {
     "awq": "quantarena.quantize.awq:quantize_awq",
+    "gptq": "quantarena.quantize.gptq:quantize_gptq",
 }
 
 MARKER = "quantarena.json"
