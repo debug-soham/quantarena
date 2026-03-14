@@ -19,6 +19,7 @@ eval = [
     "datasets>=3.2",
     "safetensors>=0.4",
 ]
+awq = ["autoawq>=0.2.7"]
 
 [project.scripts]
 quantarena = "quantarena:main"
