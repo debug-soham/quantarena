@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 
 import yaml
@@ -42,6 +43,14 @@ def cmd_show(args) -> int:
     return 0
 
 
+def cmd_quantize(args) -> int:
+    from .quantize import quantize
+
+    cfg = _compose(args)
+    quantize(cfg, force=args.force)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="quantarena")
     parser.add_argument("--config-root", default=None, help="directory with base.yaml, models/, methods/")
@@ -54,11 +63,21 @@ def build_parser() -> argparse.ArgumentParser:
     _add_experiment_args(p)
     p.set_defaults(func=cmd_show)
 
+    p = sub.add_parser("quantize", help="produce a quantized checkpoint")
+    _add_experiment_args(p)
+    p.add_argument("--force", action="store_true", help="re-quantize even if the checkpoint is current")
+    p.set_defaults(func=cmd_quantize)
+
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
     return args.func(args)
 
 
