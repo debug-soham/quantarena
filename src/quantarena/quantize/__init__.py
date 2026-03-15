@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 BACKENDS = {
     "awq": "quantarena.quantize.awq:quantize_awq",
     "gptq": "quantarena.quantize.gptq:quantize_gptq",
+    "fp8": "quantarena.quantize.fp8:quantize_fp8",
 }
 
 MARKER = "quantarena.json"

@@ -21,6 +21,7 @@ eval = [
 ]
 awq = ["autoawq>=0.2.7"]
 gptq = ["gptqmodel>=1.6", "optimum>=1.23"]
+fp8 = ["llmcompressor>=0.4", "compressed-tensors>=0.8"]
 
 [project.scripts]
 quantarena = "quantarena:main"
