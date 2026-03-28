@@ -90,7 +90,54 @@ def bench_hf(cfg: ExperimentConfig) -> list[dict]:
     return results
 
 
-BACKENDS = {"hf": bench_hf}
+def bench_vllm(cfg: ExperimentConfig) -> list[dict]:
+    from vllm import LLM, SamplingParams
+    from vllm.inputs import TokensPrompt
+
+    b = cfg.bench
+    llm = LLM(
+        model=cfg.model_path,
+        dtype=cfg.model.dtype,
+        seed=cfg.seed,
+        max_model_len=b.input_len + b.output_len,
+        max_num_seqs=max(b.batch_sizes),
+        gpu_memory_utilization=b.gpu_memory_utilization,
+        trust_remote_code=cfg.model.trust_remote_code,
+        # same random prompts are reused across iterations, caching would cheat
+        enable_prefix_caching=False,
+    )
+    vocab = len(llm.get_tokenizer())
+
+    full = SamplingParams(temperature=0.0, max_tokens=b.output_len, min_tokens=b.output_len, ignore_eos=True)
+    first = SamplingParams(temperature=0.0, max_tokens=1, ignore_eos=True)
+
+    def timed(prompts, params) -> float:
+        t0 = time.perf_counter()
+        outs = llm.generate(prompts, params, use_tqdm=False)
+        dt = time.perf_counter() - t0
+        produced = sum(len(o.outputs[0].token_ids) for o in outs)
+        expected = len(prompts) * params.max_tokens
+        if produced != expected:
+            log.warning("expected %d output tokens, got %d", expected, produced)
+        return dt
+
+    results = []
+    for bs in b.batch_sizes:
+        prompts = [
+            TokensPrompt(prompt_token_ids=p) for p in random_prompts(bs, b.input_len, vocab, cfg.seed)
+        ]
+        for _ in range(b.warmup):
+            timed(prompts, full)
+        ttfts = [timed(prompts, first) for _ in range(b.iters)]
+        e2es = [timed(prompts, full) for _ in range(b.iters)]
+        r = summarize(bs, b.output_len, ttfts, e2es)
+        log.info("bs=%d  %.1f tok/s  ttft %.1f ms", bs, r["output_tok_s"], r["ttft_ms"])
+        results.append(r)
+
+    return results
+
+
+BACKENDS = {"hf": bench_hf, "vllm": bench_vllm}
 
 
 def measure_throughput(cfg: ExperimentConfig) -> dict:
