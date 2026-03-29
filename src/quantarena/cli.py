@@ -51,6 +51,25 @@ def cmd_quantize(args) -> int:
     return 0
 
 
+def _parse_stages(value: str) -> tuple[str, ...]:
+    from .runner import STAGES
+
+    stages = tuple(s.strip() for s in value.split(",") if s.strip())
+    bad = [s for s in stages if s not in STAGES]
+    if bad:
+        raise argparse.ArgumentTypeError(f"unknown stage(s) {bad}, choose from {STAGES}")
+    return stages
+
+
+def cmd_run(args) -> int:
+    from .runner import run_experiment
+
+    cfg = _compose(args)
+    run_dir = run_experiment(cfg, stages=args.stages, force=args.force)
+    print(run_dir)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="quantarena")
     parser.add_argument("--config-root", default=None, help="directory with base.yaml, models/, methods/")
@@ -67,6 +86,17 @@ def build_parser() -> argparse.ArgumentParser:
     _add_experiment_args(p)
     p.add_argument("--force", action="store_true", help="re-quantize even if the checkpoint is current")
     p.set_defaults(func=cmd_quantize)
+
+    p = sub.add_parser("run", help="quantize (if needed) and run eval/bench stages")
+    _add_experiment_args(p)
+    p.add_argument(
+        "--stages",
+        type=_parse_stages,
+        default="quantize,ppl,memory,throughput",
+        help="comma separated subset of quantize,ppl,memory,throughput",
+    )
+    p.add_argument("--force", action="store_true", help="re-run stages even if results exist")
+    p.set_defaults(func=cmd_run)
 
     return parser
 
