@@ -70,6 +70,19 @@ def cmd_run(args) -> int:
     return 0
 
 
+def cmd_report(args) -> int:
+    from . import report
+
+    rows = report.build(args.results)
+    if not rows:
+        print(f"no results found in {args.results}")
+        return 1
+    out = args.csv or f"{args.results}/summary.csv"
+    report.write_csv(rows, out)
+    print(f"wrote {len(rows)} rows to {out}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="quantarena")
     parser.add_argument("--config-root", default=None, help="directory with base.yaml, models/, methods/")
@@ -97,6 +110,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--force", action="store_true", help="re-run stages even if results exist")
     p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("report", help="aggregate results into a summary table")
+    p.add_argument("--results", default="results")
+    p.add_argument("--csv", default=None, help="output path (default: <results>/summary.csv)")
+    p.set_defaults(func=cmd_report)
 
     return parser
 
