@@ -24,6 +24,12 @@ gptq = ["gptqmodel>=1.6", "optimum>=1.23"]
 fp8 = ["llmcompressor>=0.4", "compressed-tensors>=0.8"]
 vllm = ["vllm>=0.6.6"]
 
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [project.scripts]
 quantarena = "quantarena:main"
 
