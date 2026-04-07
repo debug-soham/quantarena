@@ -25,8 +25,17 @@ def sliding_window_nll(model, input_ids, seq_len: int, stride: int, max_windows:
     windows = 0
     prev_end = 0
 
-    for begin in range(0, n, stride):
-        end = min(begin + seq_len, n)
+    # After the first window, advance by at most seq_len - 1 so the first new target
+    # always has at least one token of context inside the window. With stride == seq_len
+    # the naive loop silently drops one token per window.
+    step = min(stride, seq_len - 1)
+
+    while prev_end < n:
+        if prev_end == 0:
+            begin, end = 0, min(seq_len, n)
+        else:
+            end = min(prev_end + step, n)
+            begin = max(0, end - seq_len)
         trg_len = end - prev_end
         ids = input_ids[:, begin:end].to(device)
         labels = ids.clone()
