@@ -3,3 +3,5 @@ model:
   hf_id: google/gemma-2-9b
   dtype: bfloat16
   max_seq_len: 4096
+  # sdpa ignores attention logit soft-capping, which shifts ppl noticeably on gemma-2
+  attn_implementation: eager
