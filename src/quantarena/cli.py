@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import subprocess
 import sys
 
 import yaml
@@ -70,6 +71,53 @@ def cmd_run(args) -> int:
     return 0
 
 
+def cmd_matrix(args) -> int:
+    """Run every model x method, one subprocess per stage.
+
+    Separate processes keep vLLM and transformers from fighting over GPU memory and
+    make sure one crash (OOM, missing kernel) does not take down the whole sweep.
+    """
+    models = args.models or C.list_models(args.config_root)
+    methods = args.methods or C.list_methods(args.config_root)
+
+    # validate everything up front so a typo doesn't show up 6 hours in
+    for model in models:
+        for method in methods:
+            C.compose(model, method, args.overrides, root=args.config_root)
+
+    base = [sys.executable, "-m", "quantarena"]
+    if args.config_root:
+        base += ["--config-root", args.config_root]
+
+    failures = []
+    for model in models:
+        for method in methods:
+            for stage in args.stages:
+                cmd = base + ["run", model, method, "--stages", stage]
+                for o in args.overrides:
+                    cmd += ["--set", o]
+                if args.force:
+                    cmd.append("--force")
+                print("$ " + " ".join(cmd[2:]), flush=True)
+                if args.dry_run:
+                    continue
+                rc = subprocess.call(cmd)
+                if rc != 0:
+                    failures.append((model, method, stage, rc))
+                    if not args.keep_going:
+                        print(f"failed with exit code {rc}", file=sys.stderr)
+                        return rc
+                    if stage == "quantize":
+                        break  # nothing to evaluate without a checkpoint
+
+    if failures:
+        print("\nfailed:", file=sys.stderr)
+        for model, method, stage, rc in failures:
+            print(f"  {model} {method} {stage} (exit {rc})", file=sys.stderr)
+        return 1
+    return 0
+
+
 def cmd_report(args) -> int:
     from . import report
 
@@ -110,6 +158,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--force", action="store_true", help="re-run stages even if results exist")
     p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("matrix", help="run all model x method combinations")
+    p.add_argument("--models", nargs="*", default=None)
+    p.add_argument("--methods", nargs="*", default=None)
+    p.add_argument("--stages", type=_parse_stages, default="quantize,ppl,memory,throughput")
+    p.add_argument("--set", dest="overrides", action="append", default=[], metavar="KEY=VALUE")
+    p.add_argument("--force", action="store_true")
+    p.add_argument("--keep-going", action="store_true", help="continue after a failed run")
+    p.add_argument("--dry-run", action="store_true", help="only print the commands")
+    p.set_defaults(func=cmd_matrix)
 
     p = sub.add_parser("report", help="aggregate results into a summary table")
     p.add_argument("--results", default="results")

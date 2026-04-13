@@ -12,3 +12,4 @@ wheels/
 # Benchmark outputs
 results/
 checkpoints/
+logs/
