@@ -49,6 +49,18 @@ def test_missing_baseline_leaves_drift_empty(tmp_path):
     assert "ppl_drift_pct" not in rows[0]
 
 
+def test_markdown_table(tmp_path):
+    _write_run(tmp_path, "m", {"method": "none", "bits": 16}, 6.0, 16.0, 50.0)
+    _write_run(tmp_path, "m", {"method": "awq", "bits": 4}, 6.3, 5.0, 100.0)
+    md = report.to_markdown(report.build(tmp_path))
+    lines = md.strip().splitlines()
+    assert lines[0].startswith("| model | method | wikitext2 ppl | drift %")
+    assert "tok/s bs1" in lines[0] and "tok/s bs32" in lines[0]
+    assert len(lines) == 4
+    assert lines[3].startswith("|  | awq-w4g128 | 6.300 | 5.00 |")
+    assert "oom" in lines[3]
+
+
 def test_csv_roundtrip(tmp_path):
     _write_run(tmp_path, "m", {"method": "none", "bits": 16}, 6.0, 16.0, 50.0)
     rows = report.build(tmp_path)

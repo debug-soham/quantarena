@@ -108,6 +108,48 @@ def write_csv(rows: list[dict], path: str | Path) -> None:
         w.writerows(rows)
 
 
+def _fmt(v, digits: int = 2) -> str:
+    if v is None or v == "":
+        return "-"
+    if isinstance(v, float):
+        return f"{v:.{digits}f}"
+    return str(v)
+
+
+def to_markdown(rows: list[dict]) -> str:
+    """Compact table for the README: quality, memory and the largest common batch size."""
+    bss = sorted(
+        {int(k.removeprefix("tok_s_bs")) for r in rows for k in r if k.startswith("tok_s_bs")}
+    )
+    cols = [
+        ("model", "model", 0),
+        ("method", "method", 0),
+        ("ppl", "wikitext2 ppl", 3),
+        ("ppl_drift_pct", "drift %", 2),
+        ("weights_gib", "weights GiB", 2),
+        ("mem_ratio", "mem ×", 2),
+    ]
+    for bs in (bss[:1] + bss[-1:]) if len(bss) > 1 else bss:
+        cols.append((f"tok_s_bs{bs}", f"tok/s bs{bs}", 1))
+        cols.append((f"speedup_bs{bs}", f"speedup bs{bs}", 2))
+
+    lines = [
+        "| " + " | ".join(h for _, h, _ in cols) + " |",
+        "|" + "|".join("---" if i < 2 else "---:" for i in range(len(cols))) + "|",
+    ]
+    prev_model = None
+    for r in rows:
+        cells = []
+        for key, _, digits in cols:
+            if key == "model" and r["model"] == prev_model:
+                cells.append("")
+                continue
+            cells.append(_fmt(r.get(key), digits))
+        prev_model = r["model"]
+        lines.append("| " + " | ".join(cells) + " |")
+    return "\n".join(lines) + "\n"
+
+
 def build(results_dir: str | Path) -> list[dict]:
     rows = add_drift(collect(results_dir))
     order = {"bf16": 0, "fp8": 1}

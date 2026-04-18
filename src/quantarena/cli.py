@@ -127,6 +127,11 @@ def cmd_report(args) -> int:
         return 1
     out = args.csv or f"{args.results}/summary.csv"
     report.write_csv(rows, out)
+    md = report.to_markdown(rows)
+    if args.md:
+        with open(args.md, "w", encoding="utf-8") as f:
+            f.write(md)
+    print(md)
     print(f"wrote {len(rows)} rows to {out}")
     return 0
 
@@ -172,6 +177,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("report", help="aggregate results into a summary table")
     p.add_argument("--results", default="results")
     p.add_argument("--csv", default=None, help="output path (default: <results>/summary.csv)")
+    p.add_argument("--md", default=None, help="also write the markdown table here")
     p.set_defaults(func=cmd_report)
 
     return parser
