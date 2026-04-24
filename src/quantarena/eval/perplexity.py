@@ -77,6 +77,8 @@ def evaluate_perplexity(cfg: ExperimentConfig) -> dict:
         model, input_ids, cfg.eval.seq_len, cfg.eval.stride, cfg.eval.max_windows
     )
     elapsed = time.perf_counter() - t0
+    if n_tokens == 0:
+        raise RuntimeError("eval corpus produced no scorable tokens")
 
     return {
         "perplexity": math.exp(nll / n_tokens),

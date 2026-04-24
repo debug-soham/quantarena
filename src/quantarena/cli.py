@@ -92,7 +92,10 @@ def cmd_matrix(args) -> int:
     failures = []
     for model in models:
         for method in methods:
+            is_baseline = C.compose(model, method, args.overrides, root=args.config_root).quant.method == "none"
             for stage in args.stages:
+                if stage == "quantize" and is_baseline:
+                    continue
                 cmd = base + ["run", model, method, "--stages", stage]
                 for o in args.overrides:
                     cmd += ["--set", o]

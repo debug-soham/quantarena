@@ -27,6 +27,14 @@ vllm = ["vllm>=0.6.6"]
 [dependency-groups]
 dev = ["pytest>=8.3"]
 
+[tool.uv]
+# pin resolution to a date so the lockfile is reproducible
+exclude-newer = "2026-04-24T00:00:00Z"
+
+[tool.uv.extra-build-dependencies]
+# autoawq ships sdist only and imports torch in setup.py
+autoawq = ["torch"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
